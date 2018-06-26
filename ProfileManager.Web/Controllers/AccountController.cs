@@ -19,7 +19,7 @@ namespace ProfileManager.Web.Controllers
         [HttpGet]
         public IActionResult SignIn()
         {
-            var redirectUrl = Url.Action(nameof(EmployeeController.Index), "Home");
+            var redirectUrl = Url.Action(nameof(EmployeeController.Index), "Employee");
             return Challenge(
                 new AuthenticationProperties { RedirectUri = redirectUrl },
                 OpenIdConnectDefaults.AuthenticationScheme);
@@ -41,7 +41,7 @@ namespace ProfileManager.Web.Controllers
             if (User.Identity.IsAuthenticated)
             {
                 // Redirect to home page if the user is authenticated.
-                return RedirectToAction(nameof(EmployeeController.Index), "Home");
+                return RedirectToAction(nameof(EmployeeController.Index), "Employee");
             }
 
             return View();
