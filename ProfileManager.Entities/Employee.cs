@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace ProfileManager.Entities
 {
     public class Employee
     {
-        public string Id { get; set; }
+        public string CompanyId { get; set; }
+        [JsonProperty("id")]
         public string ImmutableId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }

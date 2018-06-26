@@ -14,6 +14,7 @@ namespace ProfileManager.AppService
         private DocumentClient _client;
         private string _databaseId;
         private string _collectionId;
+
         public CosmosDocumentProvider(string endpoint, string key, string db, string collection) : this(new DocumentClient(new Uri(endpoint), key), db, collection) { }
         public CosmosDocumentProvider(DocumentClient client, string db, string collection)
         {
@@ -45,11 +46,23 @@ namespace ProfileManager.AppService
 
         public async Task<IEnumerable<T>> GetDocumentsAsync(Expression<Func<T, bool>> predicate)
         {
-            var query = _client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId), new FeedOptions { MaxItemCount = -1 }).Where(predicate).AsDocumentQuery();
             List<T> results = new List<T>();
-            while (query.HasMoreResults)
+            try
             {
-                results.AddRange(await query.ExecuteNextAsync<T>());
+                var query = _client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId), new FeedOptions { MaxItemCount = -1 }).Where(predicate).AsDocumentQuery();
+
+                while (query.HasMoreResults)
+                {
+                    results.AddRange(await query.ExecuteNextAsync<T>());
+                }
+            }
+            catch (DocumentClientException notFound)
+            {
+                // todo: log this
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
             return results;
         }

@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProfileManager.AppService;
-using ProfileManager.Entities;
+using ProfileManager.Web.Extensions;
 
 namespace ProfileManager.Web
 {
@@ -34,9 +29,10 @@ namespace ProfileManager.Web
             .AddAzureAd(options => Configuration.Bind("AzureAd", options))
             .AddCookie();
 
-            services.AddSingleton<IDocumentProvider<Employee>, CosmosDocumentProvider<Employee>>();
-            services.AddSingleton<IEmployeeRepository, DocumentEmployeeRepository>();
+            var employeeDbConfig = new DocumentProviderOptions();
+            Configuration.Bind("DocumentProvider", employeeDbConfig);
 
+            services.AddEmployeeDocumentDatabase(employeeDbConfig);
             services.AddMvc();
         }
 
@@ -60,7 +56,7 @@ namespace ProfileManager.Web
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Employee}/{action=List}/{id?}");
             });
         }
     }
