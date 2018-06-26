@@ -8,9 +8,9 @@ namespace ProfileManager.AppService
 {
     public class DocumentEmployeeRepository : IEmployeeRepository
     {
-        private IDocumentRepository<Employee> _repo;
+        private IDocumentProvider<Employee> _repo;
 
-        public DocumentEmployeeRepository(IDocumentRepository<Employee> repo)
+        public DocumentEmployeeRepository(IDocumentProvider<Employee> repo)
         {
             _repo = repo;
         }

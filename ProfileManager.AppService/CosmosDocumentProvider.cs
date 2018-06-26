@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace ProfileManager.AppService
 {
-    public class CosmosDocumentRepo<T> : IDocumentRepository<T> where T : class
+    public class CosmosDocumentProvider<T> : IDocumentProvider<T> where T : class
     {
         private DocumentClient _client;
         private string _databaseId;
         private string _collectionId;
-        public CosmosDocumentRepo(string endpoint, string key, string db, string collection) : this(new DocumentClient(new Uri(endpoint), key), db, collection) { }
-        public CosmosDocumentRepo(DocumentClient client, string db, string collection)
+        public CosmosDocumentProvider(string endpoint, string key, string db, string collection) : this(new DocumentClient(new Uri(endpoint), key), db, collection) { }
+        public CosmosDocumentProvider(DocumentClient client, string db, string collection)
         {
             _client = client;
             _databaseId = db;

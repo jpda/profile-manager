@@ -6,7 +6,7 @@ using Microsoft.Azure.Documents;
 
 namespace ProfileManager.AppService
 {
-    public interface IDocumentRepository<T> where T : class
+    public interface IDocumentProvider<T> where T : class
     {
         Task<T> CreateDocumentAsync(T item);
         Task<T> ReplaceDocumentAsync(string id, T item);
