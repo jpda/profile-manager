@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProfileManager.AppService;
+using ProfileManager.Entities;
 
 namespace ProfileManager.Web
 {
@@ -31,6 +33,9 @@ namespace ProfileManager.Web
             })
             .AddAzureAd(options => Configuration.Bind("AzureAd", options))
             .AddCookie();
+
+            services.AddSingleton<IDocumentRepository<Employee>, CosmosDocumentRepo<Employee>>();
+            services.AddSingleton<IEmployeeRepository, DocumentEmployeeRepository>();
 
             services.AddMvc();
         }

@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
+using ProfileManager.AppService;
 
 namespace ProfileManager.Web.Controllers
 {
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
+        IEmployeeRepository _employeeRepo;
+
+        public AccountController(IEmployeeRepository employeeRepo)
+        {
+            _employeeRepo = employeeRepo;
+        }
+
         [HttpGet]
         public IActionResult SignIn()
         {
