@@ -1,0 +1,18 @@
+﻿[
+  {
+    "faceId": "7ed1c892-b45b-4df7-bc2f-8b817ddbad8f",
+    "faceRectangle": {
+      "top": 257,
+      "left": 699,
+      "width": 298,
+      "height": 298
+    },
+    "faceAttributes": {
+      "occlusion": {
+        "foreheadOccluded": false,
+        "eyeOccluded": false,
+        "mouthOccluded": false
+      }
+    }
+  }
+]

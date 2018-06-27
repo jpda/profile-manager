@@ -1,0 +1,50 @@
+﻿[
+  {
+    "faceId": "45b86ac4-70d2-4902-86c0-5379ad343eb1",
+    "faceRectangle": {
+      "top": 298,
+      "left": 1099,
+      "width": 107,
+      "height": 107
+    },
+    "faceAttributes": {
+      "occlusion": {
+        "foreheadOccluded": false,
+        "eyeOccluded": false,
+        "mouthOccluded": false
+      }
+    }
+  },
+  {
+    "faceId": "cb0bf6bd-2c9c-4f3b-80aa-bec5afb81d65",
+    "faceRectangle": {
+      "top": 353,
+      "left": 704,
+      "width": 104,
+      "height": 104
+    },
+    "faceAttributes": {
+      "occlusion": {
+        "foreheadOccluded": false,
+        "eyeOccluded": false,
+        "mouthOccluded": false
+      }
+    }
+  },
+  {
+    "faceId": "71745f6d-1636-474b-863d-e7a76455e821",
+    "faceRectangle": {
+      "top": 395,
+      "left": 419,
+      "width": 92,
+      "height": 92
+    },
+    "faceAttributes": {
+      "occlusion": {
+        "foreheadOccluded": false,
+        "eyeOccluded": false,
+        "mouthOccluded": false
+      }
+    }
+  }
+]
