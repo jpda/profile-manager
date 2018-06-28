@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using E = ProfileManager.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.ProjectOxford.Face.Contract;
 using System.IO;
@@ -26,12 +25,22 @@ namespace ProfileManager.AppService
             _faceApiClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _options.Value.Key);
         }
 
+        public Task AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "")
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string group = "")
         {
             throw new NotImplementedException();
         }
 
         public Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string group = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Guid> CreatePersonInPersonGroupAsync(string employeeObjectId, string employeeId, string personName, string groupId = "")
         {
             throw new NotImplementedException();
         }
@@ -122,30 +131,5 @@ namespace ProfileManager.AppService
             }
             return new List<Face>();
         }
-    }
-
-    public class BlobProvider : IBlobProvider
-    {
-        public Task<Uri> AddBlob(byte[] blobData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Uri> GetReadSasForBlob(string blobUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Uri> GetWriteSasForBlob(string blobUri)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public interface IBlobProvider
-    {
-        Task<Uri> AddBlob(byte[] blobData);
-        Task<Uri> GetReadSasForBlob(string blobUri);
-        Task<Uri> GetWriteSasForBlob(string blobUri);
     }
 }

@@ -12,8 +12,8 @@ namespace ProfileManager.AppService
     {
         Task<IList<Face>> DetectFacesFromPhotoAsync(Uri photoUri);
         Task<IList<Face>> DetectFacesFromPhotoAsync(byte[] fileData);
-        Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string groupId = "");
-        Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string groupId = "");
+        Task AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "");
+        Task<Guid> CreatePersonInPersonGroupAsync(string employeeObjectId, string employeeId, string personName, string groupId = "");
         Task IdentifyFaceAsync(byte[] fileData, string groupId = "");
     }
 }

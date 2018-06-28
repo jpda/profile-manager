@@ -50,6 +50,7 @@ namespace ProfileManager.Web.Controllers
             try
             {
                 await _repo.CreateEmployeeAsync(e);
+                // do face stuff
                 return RedirectToAction(nameof(Index));
             }
             catch

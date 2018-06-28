@@ -5,11 +5,12 @@ using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 using System.Linq;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace ProfileManager.AppService
 {
     /// <summary>
-    /// Uses the ProjectOxford client library instead of hand-rolled artisan HttpRequests. Default group ID is sent in at instantiation time.
+    /// Uses the ProjectOxford client library instead of hand-rolled artisan HttpRequests. Default group ID is sent in at init.
     /// </summary>
     public class AzureOxfordFaceInfoProvider : IFaceInfoProvider
     {
@@ -60,34 +61,27 @@ namespace ProfileManager.AppService
         }
 
         /// <summary>
-        /// Adds a person to a group - supports identifying them later
+        /// Adds a person to a group - supports identifying them later. PersonId is the one returned from <see cref="CreatePersonInPersonGroupAsync"/>
         /// </summary>
         /// <param name="personId"></param>
         /// <param name="fileData"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        public async Task AddPersonAndPhotoToGroupAsync(Guid personId, string personName, byte[] fileData, string groupId = "")
+        public async Task AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "")
         {
             var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
             var group = await GetPersonGroupOrCreateAsync(targetGroup);
 
             try
             {
-                Person person;
-                var people = await _client.ListPersonsInPersonGroupAsync(group.PersonGroupId);
-                if (!people.Any(x => x.PersonId == personId))
-                {
-                    var creationResult = await _client.CreatePersonInPersonGroupAsync(group.PersonGroupId, personName);
-                    personId = creationResult.PersonId;
-                }
-
-                person = await _client.GetPersonInPersonGroupAsync(group.PersonGroupId, personId);
+                //todo: check if person exists? 
+                //var person = await _client.GetPersonInPersonGroupAsync(group.PersonGroupId, personId);
 
                 using (var ms = new MemoryStream(fileData))
                 {
                     var result = await _client.AddPersonFaceInPersonGroupAsync(group.PersonGroupId, personId, ms);
                 }
-
+                // todo: move this to a queue-triggered function, since it's a long-running process we can do out-of-band
                 await _client.TrainPersonGroupAsync(group.PersonGroupId);
             }
             catch (Exception)
@@ -98,33 +92,47 @@ namespace ProfileManager.AppService
         }
 
         /// <summary>
+        /// Used to add a person to a group before adding photos. 
+        /// </summary>
+        /// <param name="employeeObjectId">Immutable record identifier for person.</param>
+        /// <param name="employeeId">Context-specific employee ID</param>
+        /// <param name="personName">Person's display name</param>
+        /// <param name="groupId">PersonGroup Id, if different from initialized default</param>
+        /// <returns></returns>
+        public async Task<Guid> CreatePersonInPersonGroupAsync(string employeeObjectId, string employeeId, string personName, string groupId = "")
+        {
+            var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
+            var group = await GetPersonGroupOrCreateAsync(targetGroup);
+            var creationResult = await _client.CreatePersonInPersonGroupAsync(group.PersonGroupId, personName, JsonConvert.SerializeObject(new { EmployeeObjectId = employeeObjectId, EmployeeId = employeeId }));
+            return creationResult.PersonId;
+        }
+
+        /// <summary>
         /// Adds person to group. If group doesn't exist, creates group.
         /// </summary>
         /// <param name="personId">Unique person ID</param>
         /// <param name="photoData"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        public async Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string groupId = "")
-        {
-            var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
-            var group = await GetPersonGroupOrCreateAsync(targetGroup);
-            using (var ms = new MemoryStream(photoData))
-            {
-                return await AddPersonToGroupAsync(personId, photoData, group.PersonGroupId);
-            }
-        }
+        //public async Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string groupId = "")
+        //{
+        //    var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
+        //    var group = await GetPersonGroupOrCreateAsync(targetGroup);
+        //    using (var ms = new MemoryStream(photoData))
+        //    {
+        //        return await AddPersonToGroupAsync(personId, photoData, group.PersonGroupId);
+        //    }
+        //}
 
-        public async Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string groupId = "")
-        {
-            var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
-            var group = await GetPersonGroupOrCreateAsync(targetGroup);
-            // AddPersonFaceInPersonGroupAsync calls DetectAsync as part of its implementation, so no need to do that separately
-            var result = await _client.AddPersonFaceInPersonGroupAsync(group.PersonGroupId, personId, photoData);
-            await _client.TrainPersonGroupAsync(group.PersonGroupId);
-            return result;
-        }
-
-        #region PersonGroup creation
+        //public async Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string groupId = "")
+        //{
+        //    var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
+        //    var group = await GetPersonGroupOrCreateAsync(targetGroup);
+        //    // AddPersonFaceInPersonGroupAsync calls DetectAsync as part of its implementation, so no need to do that separately
+        //    var result = await _client.AddPersonFaceInPersonGroupAsync(group.PersonGroupId, personId, photoData);
+        //    await _client.TrainPersonGroupAsync(group.PersonGroupId);
+        //    return result;
+        //}
 
         private async Task<PersonGroup> GetPersonGroupAsync(string groupId)
         {
@@ -148,7 +156,5 @@ namespace ProfileManager.AppService
             await _client.CreatePersonGroupAsync(groupId, groupId);
             return await GetPersonGroupAsync(groupId);
         }
-
-        #endregion
     }
 }
