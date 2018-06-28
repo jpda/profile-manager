@@ -82,11 +82,11 @@ namespace ProfileManager.Web.Controllers
 
                 if (!ModelState.IsValid) return View();
                 var employee = await _repo.CreateEmployeeAsync(e);
-                var personId = await _faceProvider.CreatePersonInPersonGroupAsync(employee.ImmutableId, employee.CompanyId, $"{employee.FirstName} {employee.LastName}");
-                var persistedFaceId = await _faceProvider.AddPersonFaceAsync(personId, e.PhotoBytes);
-                employee.PersonGroupPersonId = personId;
-                employee.PersistedFaceId = persistedFaceId;
-                await _repo.UpdateEmployeeAsync(employee);
+                //var personId = await _faceProvider.CreatePersonInPersonGroupAsync(employee.ImmutableId, employee.CompanyId, $"{employee.FirstName} {employee.LastName}");
+                //var persistedFaceId = await _faceProvider.AddPersonFaceAsync(personId, e.PhotoBytes);
+                //employee.PersonGroupPersonId = personId;
+                //employee.PersistedFaceId = persistedFaceId;
+                //await _repo.UpdateEmployeeAsync(employee);
                 return RedirectToAction(nameof(Index));
             }
             catch

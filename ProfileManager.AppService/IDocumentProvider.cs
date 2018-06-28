@@ -8,10 +8,10 @@ namespace ProfileManager.AppService
 {
     public interface IDocumentProvider<T> where T : class
     {
-        Task<T> CreateDocumentAsync(T item);
-        Task<T> ReplaceDocumentAsync(string id, T item);
+        Task<ServiceResult<T>> CreateDocumentAsync(T item);
+        Task<ServiceResult<T>> ReplaceDocumentAsync(string id, T item);
         Task DeleteDocumentAsync(string id);
-        Task<IEnumerable<T>> GetDocumentsAsync(Expression<Func<T, bool>> predicate);
-        Task<T> GetDocumentAsync(string id);
+        Task<ServiceResult<IEnumerable<T>>> GetDocumentsAsync(Expression<Func<T, bool>> predicate);
+        Task<ServiceResult<T>> GetDocumentAsync(string id);
     }
 }
