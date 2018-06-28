@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,13 @@ namespace ProfileManager.AppService
         private string _databaseId;
         private string _collectionId;
 
-        public CosmosDocumentProvider(string endpoint, string key, string db, string collection) : this(new DocumentClient(new Uri(endpoint), key), db, collection) { }
+        //todo: don't like IOptions permeating everything
+        //todo: push IOptions further up to the callers instead of the service itself
+        private IOptions<DocumentProviderOptions> _options;
+
+        // keeping these 
+        public CosmosDocumentProvider(IOptions<DocumentProviderOptions> options) : this(new DocumentClient(new Uri(options.Value.Endpoint), options.Value.Key), options) { }
+        public CosmosDocumentProvider(DocumentClient client, IOptions<DocumentProviderOptions> options): this(new DocumentClient(new Uri(options.Value.Endpoint), options.Value.Key), options.Value.Database, options.Value.Collection) { }
         public CosmosDocumentProvider(DocumentClient client, string db, string collection)
         {
             _client = client;
@@ -34,6 +41,7 @@ namespace ProfileManager.AppService
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
+                    // todo: be better
                     return null;
                 }
                 else

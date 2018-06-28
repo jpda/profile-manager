@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ProfileManager.Web.Extensions
+namespace ProfileManager.AppService
 {
     public class DocumentProviderOptions
     {

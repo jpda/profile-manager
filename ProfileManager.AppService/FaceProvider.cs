@@ -4,23 +4,24 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ProfileManager.Entities;
+using Microsoft.Extensions.Options;
 
 namespace ProfileManager.AppService
 {
 
-    public class AzureFaceProvider : IFaceInfoProvider
+    public class AzureFaceInfoProvider : IFaceInfoProvider
     {
-        // don't dispose this; it'll keep sockets open in TIME_WAIT status :/
         private readonly HttpClient _faceApiClient;
-        private readonly string _faceApiEndpoint;
+        private readonly IOptions<FaceInfoProviderOptions> _options;
 
-        public AzureFaceProvider(string endpoint, string key) : this(new HttpClient(), endpoint, key) { }
+        // todo: using IOptions here feels pretty leaky
+        public AzureFaceInfoProvider(IOptions<FaceInfoProviderOptions> options) : this(new HttpClient(), options) { }
 
-        public AzureFaceProvider(HttpClient client, string endpoint, string key)
+        public AzureFaceInfoProvider(HttpClient client, IOptions<FaceInfoProviderOptions> options)
         {
-            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", key);
+            _options = options;
             _faceApiClient = client;
-            _faceApiEndpoint = endpoint;
+            _faceApiClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _options.Value.Key);
         }
 
         public Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri)
@@ -28,46 +29,62 @@ namespace ProfileManager.AppService
             throw new NotImplementedException();
         }
 
+        public Task<decimal> GetFaceMatchConfidenceAsync(byte[] photo, byte[] otherPhoto)
+        {
+            // todo: face ID expires after 24 hours, so a potential optimization would be to store the faceId and the last-scanned timestamp
+            // todo: or use the face persistence channels in the face API
+            
+            throw new NotImplementedException();
+            var face1 = GetFacesFromPhotoAsync(photo);
+            var face2 = GetFacesFromPhotoAsync(otherPhoto);
+
+            var uri = $"{_options.Value.Endpoint}/verify";
+            using (var content = new StringContent(JsonConvert.SerializeObject(new { faceId1 = face1, faceId2 = face2 })))
+            {
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                //return await GetFacesFromApi(content, uri);
+            }
+        }
+
         public async Task<IList<Face>> GetFacesFromPhotoAsync(Uri photoUri)
         {
-            var httpClient = new HttpClient();
-            return await GetFacesFromPhotoAsync(await httpClient.GetByteArrayAsync(photoUri));
-            throw new NotImplementedException();
+            var uri = $"{_options.Value.Endpoint}/detect?returnFaceId=true&returnFaceAttributes=occlusion";
+            using (var content = new StringContent(JsonConvert.SerializeObject(new { url = photoUri.ToString() })))
+            {
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                return await GetFacesFromApi(content, uri);
+            }
         }
 
-        public async Task<IList<Face>> GetFacesFromPhotoAsync(byte[] fileData)
+        public async Task<IList<Face>> GetFacesFromPhotoAsync(byte[] photoData)
         {
-            var uri = $"{_faceApiEndpoint}/detect?returnFaceId=true&returnFaceAttributes=occlusion";
-            using (var content = new ByteArrayContent(fileData))
+            var uri = $"{_options.Value.Endpoint}/detect?returnFaceId=true&returnFaceAttributes=occlusion";
+            using (var content = new ByteArrayContent(photoData))
             {
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-                try
+                return await GetFacesFromApi(content, uri);
+            }
+        }
+
+        private async Task<IList<Face>> GetFacesFromApi(HttpContent content, string uri)
+        {
+            try
+            {
+                var rawFaceResponse = await _faceApiClient.PostAsync(uri, content);
+                if (rawFaceResponse.IsSuccessStatusCode)
                 {
-                    var rawFaceResponse = await _faceApiClient.PostAsync(uri, content);
-                    if (rawFaceResponse.IsSuccessStatusCode)
-                    {
-                        var rawResponse = await rawFaceResponse.Content.ReadAsStringAsync();
-                        var faceData = JsonConvert.DeserializeObject<List<Face>>(rawResponse);
-                        return faceData;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // todo: do something...log, retry, whatev
-                    Console.WriteLine(ex.Message);
-                    throw;
+                    var rawResponse = await rawFaceResponse.Content.ReadAsStringAsync();
+                    var faceData = JsonConvert.DeserializeObject<List<Face>>(rawResponse);
+                    return faceData;
                 }
             }
-
+            catch (Exception ex)
+            {
+                // todo: implement retry + log
+                Console.WriteLine(ex.Message);
+            }
             return new List<Face>();
         }
-    }
-
-    public interface IFaceInfoProvider
-    {
-        Task<IList<Face>> GetFacesFromPhotoAsync(Uri photoUri);
-        Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri);
-        Task<IList<Face>> GetFacesFromPhotoAsync(byte[] fileData);
     }
 
     public class BlobProvider : IBlobProvider

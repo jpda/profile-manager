@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProfileManager.Web.Extensions;
+using ProfileManager.AppService;
+using ProfileManager.Entities;
 
 namespace ProfileManager.Web
 {
@@ -18,7 +19,6 @@ namespace ProfileManager.Web
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAuthentication(sharedOptions =>
@@ -29,10 +29,14 @@ namespace ProfileManager.Web
             .AddAzureAd(options => Configuration.Bind("AzureAd", options))
             .AddCookie();
 
-            var employeeDbConfig = new DocumentProviderOptions();
-            Configuration.Bind("DocumentProvider", employeeDbConfig);
+            // todo: refactor configuration; let callers configure via ioptions 
+            services.Configure<DocumentProviderOptions>(Configuration.GetSection("DocumentProvider"));
+            services.Configure<FaceInfoProviderOptions>(Configuration.GetSection("FaceInfoProvider"));
 
-            services.AddEmployeeDocumentDatabase(employeeDbConfig);
+            // todo: refactor, these probably don't need to be singleton but need to consider implications before switching to transient, especially with httpclient
+            services.AddSingleton<IDocumentProvider<Employee>, CosmosDocumentProvider<Employee>>();
+            services.AddSingleton<IEmployeeRepository, DocumentEmployeeRepository>();
+            services.AddSingleton<IFaceInfoProvider, AzureFaceInfoProvider>();
             services.AddMvc();
         }
 
