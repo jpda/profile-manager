@@ -39,6 +39,12 @@ namespace ProfileManager.Web.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> DetailsByEmployeeId(string id)
+        {
+            var model = await _repo.GetEmployeeByEmployeeIdAsync(id);
+            return View(nameof(Details), model);
+        }
+
         // GET: Employee/Create
         public ActionResult Create()
         {
@@ -53,7 +59,7 @@ namespace ProfileManager.Web.Controllers
         {
             try
             {
-                if(photoFile == null)
+                if (photoFile == null)
                 {
                     ModelState.AddModelError(string.Empty, "No photo uploaded.");
                 }
@@ -82,12 +88,12 @@ namespace ProfileManager.Web.Controllers
 
                 if (!ModelState.IsValid) return View();
                 var employee = await _repo.CreateEmployeeAsync(e);
-                //var personId = await _faceProvider.CreatePersonInPersonGroupAsync(employee.ImmutableId, employee.CompanyId, $"{employee.FirstName} {employee.LastName}");
-                //var persistedFaceId = await _faceProvider.AddPersonFaceAsync(personId, e.PhotoBytes);
-                //employee.PersonGroupPersonId = personId;
-                //employee.PersistedFaceId = persistedFaceId;
-                //await _repo.UpdateEmployeeAsync(employee);
-                return RedirectToAction(nameof(Index));
+                var personId = await _faceProvider.CreatePersonInPersonGroupAsync(employee.ImmutableId, employee.CompanyId, $"{employee.FirstName} {employee.LastName}");
+                var persistedFaceId = await _faceProvider.AddPersonFaceAsync(personId, e.PhotoBytes);
+                employee.PersonGroupPersonId = personId;
+                employee.PersistedFaceId = persistedFaceId;
+                await _repo.UpdateEmployeeAsync(employee);
+                return RedirectToAction(nameof(Details), new { id = employee.ImmutableId });
             }
             catch
             {

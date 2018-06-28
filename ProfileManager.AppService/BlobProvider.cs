@@ -1,15 +1,37 @@
 ﻿using System;
 using System.Threading.Tasks;
-using E = ProfileManager.Entities;
+using Microsoft.Extensions.Options;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace ProfileManager.AppService
 {
-
-    public class BlobProvider : IBlobProvider
+    public interface IBlobProvider
     {
-        public Task<Uri> AddBlob(byte[] blobData)
+        Task<Uri> AddBlob(byte[] blobData, string name);
+        Task<Uri> GetReadSasForBlob(string blobUri);
+        Task<Uri> GetWriteSasForBlob(string blobUri);
+    }
+
+    public class AzureStorageBlobProvider : IBlobProvider
+    {
+        private CloudStorageAccount _account;
+        private CloudBlobContainer _container;
+
+        public AzureStorageBlobProvider(IOptions<BlobProviderOptions> options) : this(options.Value.ConnectionString, options.Value.UploadContainer) { }
+
+        public AzureStorageBlobProvider(string connectionString, string containerName)
         {
-            throw new NotImplementedException();
+            _account = CloudStorageAccount.Parse(connectionString);
+            _container = _account.CreateCloudBlobClient().GetContainerReference(containerName);
+            _container.CreateIfNotExistsAsync().Wait();
+        }
+
+        public async Task<Uri> AddBlob(byte[] blobData, string name)
+        {
+            var blob = _container.GetBlockBlobReference(name);
+            await blob.UploadFromByteArrayAsync(blobData, 0, blobData.Length);
+            return blob.Uri;
         }
 
         public Task<Uri> GetReadSasForBlob(string blobUri)
@@ -21,12 +43,5 @@ namespace ProfileManager.AppService
         {
             throw new NotImplementedException();
         }
-    }
-
-    public interface IBlobProvider
-    {
-        Task<Uri> AddBlob(byte[] blobData);
-        Task<Uri> GetReadSasForBlob(string blobUri);
-        Task<Uri> GetWriteSasForBlob(string blobUri);
     }
 }

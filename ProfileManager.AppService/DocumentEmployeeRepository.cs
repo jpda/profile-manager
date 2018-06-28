@@ -11,10 +11,12 @@ namespace ProfileManager.AppService
     public class DocumentEmployeeRepository : IEmployeeRepository
     {
         private IDocumentProvider<Employee> _repo;
+        private IBlobProvider _blobProvider;
 
-        public DocumentEmployeeRepository(IDocumentProvider<Employee> repo)
+        public DocumentEmployeeRepository(IDocumentProvider<Employee> repo, IBlobProvider blobProvider)
         {
             _repo = repo;
+            _blobProvider = blobProvider;
         }
 
         public async Task<Employee> GetEmployeeAsync(string immutableId)
@@ -77,6 +79,8 @@ namespace ProfileManager.AppService
                 if (!employeeRecord.Success && employeeRecord.ErrorCode == "Conflict")
                 {
                     await CreateEmployeeAsync(e);
+                    // todo: reconsider this, perhaps totally OOB photo uploading (for supporting multiple)
+                    await SaveEmployeePhoto(e);
                 }
                 //todo : handle other error cases better than rethrowing
                 else if (!employeeRecord.Success && employeeRecord.Exception != null)
@@ -96,6 +100,14 @@ namespace ProfileManager.AppService
             }
             // todo: hate to return null
             return null;
+        }
+
+        private async Task<Employee> SaveEmployeePhoto(Employee e)
+        {
+            var name = $"{e.PersistedFaceId}.jpg";
+            var photoUri = await _blobProvider.AddBlob(e.PhotoBytes, name);
+            e.PhotoPath = photoUri;
+            return await UpdateEmployeeAsync(e);
         }
     }
 }
