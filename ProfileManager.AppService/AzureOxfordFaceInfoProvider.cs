@@ -6,6 +6,7 @@ using Microsoft.ProjectOxford.Face.Contract;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 
 namespace ProfileManager.AppService
 {
@@ -17,6 +18,9 @@ namespace ProfileManager.AppService
         // todo: decide if group ID will be hidden, overridable per call or required and ditch the default
         private readonly IFaceServiceClient _client;
         private readonly string _defaultPersonGroupId;
+
+        // todo: configure this outside of here so no IOptions leakage
+        public AzureOxfordFaceInfoProvider(IOptions<FaceInfoProviderOptions> options) : this(new FaceServiceClient(options.Value.Key, options.Value.Endpoint), options.Value.PersonGroupId) { }
 
         public AzureOxfordFaceInfoProvider(IFaceServiceClient client, string personGroupId)
         {
@@ -67,7 +71,7 @@ namespace ProfileManager.AppService
         /// <param name="fileData"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        public async Task AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "")
+        public async Task<Guid> AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "")
         {
             var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
             var group = await GetPersonGroupOrCreateAsync(targetGroup);
@@ -80,9 +84,11 @@ namespace ProfileManager.AppService
                 using (var ms = new MemoryStream(fileData))
                 {
                     var result = await _client.AddPersonFaceInPersonGroupAsync(group.PersonGroupId, personId, ms);
+                    // todo: move this to a queue-triggered function, since it's a long-running process we can do out-of-band
+                    await _client.TrainPersonGroupAsync(group.PersonGroupId);
+                    return result.PersistedFaceId;
                 }
-                // todo: move this to a queue-triggered function, since it's a long-running process we can do out-of-band
-                await _client.TrainPersonGroupAsync(group.PersonGroupId);
+
             }
             catch (Exception)
             {

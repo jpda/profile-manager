@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.ProjectOxford.Face;
 using ProfileManager.AppService;
 using ProfileManager.Entities;
 
@@ -36,6 +37,10 @@ namespace ProfileManager.Web
             // todo: refactor, these probably don't need to be singleton but need to consider implications before switching to transient, especially with httpclient
             services.AddSingleton<IDocumentProvider<Employee>, CosmosDocumentProvider<Employee>>();
             services.AddSingleton<IEmployeeRepository, DocumentEmployeeRepository>();
+            services.AddSingleton<IFaceServiceClient, FaceServiceClient>(x =>
+            {
+                return new FaceServiceClient(Configuration["FaceInfoProvider:Key"], Configuration["FaceInfoProvider:Endpoint"]);
+            });
             services.AddSingleton<IFaceInfoProvider, AzureOxfordFaceInfoProvider>();
             services.AddMvc();
         }

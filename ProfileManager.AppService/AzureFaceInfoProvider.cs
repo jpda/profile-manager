@@ -112,6 +112,11 @@ namespace ProfileManager.AppService
             throw new NotImplementedException();
         }
 
+        Task<Guid> IFaceInfoProvider.AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId)
+        {
+            throw new NotImplementedException();
+        }
+
         private async Task<IList<Face>> GetFacesFromApi(HttpContent content, string uri)
         {
             try
