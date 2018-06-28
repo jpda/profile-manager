@@ -13,16 +13,19 @@ namespace ProfileManager.AppService
     public class CosmosDocumentProvider<T> : IDocumentProvider<T> where T : class
     {
         private DocumentClient _client;
-        private string _databaseId;
-        private string _collectionId;
+        private readonly string _databaseId;
+        private readonly string _collectionId;
 
         //todo: don't like IOptions permeating everything
         //todo: push IOptions further up to the callers instead of the service itself
-        private IOptions<DocumentProviderOptions> _options;
+        private readonly IOptions<DocumentProviderOptions> _options;
 
-        // keeping these 
+        // keeping these ctors to limit the blast radius when inevitably i yank out IOptions since it is continuing to bug me that it is in here
         public CosmosDocumentProvider(IOptions<DocumentProviderOptions> options) : this(new DocumentClient(new Uri(options.Value.Endpoint), options.Value.Key), options) { }
-        public CosmosDocumentProvider(DocumentClient client, IOptions<DocumentProviderOptions> options): this(new DocumentClient(new Uri(options.Value.Endpoint), options.Value.Key), options.Value.Database, options.Value.Collection) { }
+        public CosmosDocumentProvider(DocumentClient client, IOptions<DocumentProviderOptions> options) : this(new DocumentClient(new Uri(options.Value.Endpoint), options.Value.Key), options.Value.Database, options.Value.Collection)
+        {
+            _options = options;
+        }
         public CosmosDocumentProvider(DocumentClient client, string db, string collection)
         {
             _client = client;

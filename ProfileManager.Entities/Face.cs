@@ -5,6 +5,7 @@ using System.Text;
 
 namespace ProfileManager.Entities
 {
+    [Obsolete("Use Oxford face contracts")]
     public class Face
     {
         [JsonProperty("faceId")]

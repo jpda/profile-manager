@@ -36,7 +36,7 @@ namespace ProfileManager.Web
             // todo: refactor, these probably don't need to be singleton but need to consider implications before switching to transient, especially with httpclient
             services.AddSingleton<IDocumentProvider<Employee>, CosmosDocumentProvider<Employee>>();
             services.AddSingleton<IEmployeeRepository, DocumentEmployeeRepository>();
-            services.AddSingleton<IFaceInfoProvider, AzureFaceInfoProvider>();
+            services.AddSingleton<IFaceInfoProvider, AzureOxfordFaceInfoProvider>();
             services.AddMvc();
         }
 
