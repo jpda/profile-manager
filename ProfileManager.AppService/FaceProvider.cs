@@ -23,7 +23,7 @@ namespace ProfileManager.AppService
             _faceApiEndpoint = endpoint;
         }
 
-        public Task<decimal> CheckFaceAsync(Uri photoUri, Uri liveUri)
+        public Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri)
         {
             throw new NotImplementedException();
         }
@@ -66,7 +66,7 @@ namespace ProfileManager.AppService
     public interface IFaceInfoProvider
     {
         Task<IList<Face>> GetFacesFromPhotoAsync(Uri photoUri);
-        Task<bool> CheckFaceAsync(Uri photoUri, Uri liveUri);
+        Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri);
         Task<IList<Face>> GetFacesFromPhotoAsync(byte[] fileData);
     }
 
