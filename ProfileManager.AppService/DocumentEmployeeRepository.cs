@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProfileManager.AppService
 {
+    // todo: handle the success == false case with the change to serviceresult
     public class DocumentEmployeeRepository : IEmployeeRepository
     {
         private IDocumentProvider<Employee> _repo;
@@ -18,13 +19,18 @@ namespace ProfileManager.AppService
 
         public async Task<Employee> GetEmployeeAsync(string immutableId)
         {
-            return await _repo.GetDocumentAsync(immutableId);
+
+            var result = await _repo.GetDocumentAsync(immutableId);
+            return result.Value;
         }
 
-        //todo: clean this up
+        //todo: handle
         public async Task<Employee> GetEmployeeByEmployeeIdAsync(string id)
         {
-            var results = await _repo.GetDocumentsAsync(x => x.CompanyId == id);
+            var result = await _repo.GetDocumentsAsync(x => x.CompanyId == id);
+
+            var results = result.Value;
+
             if (!results.Any()) return new Employee();
             if (results.Count() > 1)
             {
@@ -35,16 +41,16 @@ namespace ProfileManager.AppService
 
         public async Task<IEnumerable<Employee>> GetEmployeesAsync(Expression<Func<Employee, bool>> predicate)
         {
-            return await _repo.GetDocumentsAsync(predicate);
+            return (await _repo.GetDocumentsAsync(predicate)).Value;
         }
         public async Task<IEnumerable<Employee>> GetAllEmployeesAsync()
         {
-            return await _repo.GetDocumentsAsync(x => true);
+            return (await _repo.GetDocumentsAsync(x => true)).Value;
         }
 
         public async Task<Employee> UpdateEmployeeAsync(Employee e)
         {
-            return await _repo.ReplaceDocumentAsync(e.ImmutableId, e);
+            return (await _repo.ReplaceDocumentAsync(e.ImmutableId, e)).Value;
         }
 
         public async Task DeleteEmployeeAsync(Employee e)
@@ -59,7 +65,37 @@ namespace ProfileManager.AppService
             {
                 e.ImmutableId = Guid.NewGuid().ToString();
             }
-            return await _repo.CreateDocumentAsync(e);
+            // since cosmos' auto-generated IDs are all guids, need to come up with a shorthand here that's easy for humans to use
+            // todo: figure out something better than Random - sticking to 4 digits here for readability but obviously this would need to change 
+            // todo: at this point, it might be cheaper to just ping the DB with the ID to check for a result rather than wait for and catch an exception, although not found throws an exception too
+            var r = new Random();
+            var empId = r.Next(0, 9999).ToString("D4");
+            e.CompanyId = empId;
+            try
+            {
+                var employeeRecord = await _repo.CreateDocumentAsync(e);
+                if (!employeeRecord.Success && employeeRecord.ErrorCode == "Conflict")
+                {
+                    await CreateEmployeeAsync(e);
+                }
+                //todo : handle other error cases better than rethrowing
+                else if (!employeeRecord.Success && employeeRecord.Exception != null)
+                {
+                    throw employeeRecord.Exception;
+                }
+                else
+                {
+                    throw new Exception(employeeRecord.Message);
+                }
+                return employeeRecord.Value;
+            }
+            catch (Exception ex)
+            {
+                // todo: needs exception handling and retry for all these network calls
+                Console.WriteLine(ex);
+            }
+            // todo: hate to return null
+            return null;
         }
     }
 }

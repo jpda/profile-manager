@@ -33,12 +33,12 @@ namespace ProfileManager.AppService
             _collectionId = collection;
         }
 
-        public async Task<T> GetDocumentAsync(string id)
+        public async Task<ServiceResult<T>> GetDocumentAsync(string id)
         {
             try
             {
                 var document = await _client.ReadDocumentAsync(UriFactory.CreateDocumentUri(_databaseId, _collectionId, id));
-                return (T)(dynamic)document.Resource;
+                return new ServiceResult<T>((T)(dynamic)document.Resource);
             }
             catch (DocumentClientException e)
             {
@@ -55,7 +55,7 @@ namespace ProfileManager.AppService
             }
         }
 
-        public async Task<IEnumerable<T>> GetDocumentsAsync(Expression<Func<T, bool>> predicate)
+        public async Task<ServiceResult<IEnumerable<T>>> GetDocumentsAsync(Expression<Func<T, bool>> predicate)
         {
             List<T> results = new List<T>();
             try
@@ -70,25 +70,34 @@ namespace ProfileManager.AppService
             catch (DocumentClientException notFound)
             {
                 // todo: log this
+                return new ServiceResult<IEnumerable<T>>() { ErrorCode = "NotFound", Success = false };
             }
             catch (Exception ex)
             {
                 throw;
             }
-            return results;
+            return new ServiceResult<IEnumerable<T>>(results);
         }
 
-        //todo: consider returning Document for additional metadata? or too leaky?
-        public async Task<T> CreateDocumentAsync(T item)
+        //todo: consider returning Document for additional metadata? too leaky since it's implementation specific?
+        // if IDs collide, Cosmos will throw an exception
+        public async Task<ServiceResult<T>> CreateDocumentAsync(T item)
         {
-            var response = await _client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId), item);
-            return (T)(dynamic)response.Resource;
+            try
+            {
+                var response = await _client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_databaseId, _collectionId), item);
+                return new ServiceResult<T>((T)(dynamic)response.Resource);
+            }
+            catch (DocumentClientException ex)
+            {
+                return new ServiceResult<T>() { Success = false, Message = ex.Message, ErrorCode = ex.Error.Code, Exception = ex };
+            }
         }
 
-        public async Task<T> ReplaceDocumentAsync(string id, T item)
+        public async Task<ServiceResult<T>> ReplaceDocumentAsync(string id, T item)
         {
             var response = await _client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_databaseId, _collectionId, id), item);
-            return (T)(dynamic)response.Resource;
+            return new ServiceResult<T>((T)(dynamic)response.Resource);
         }
 
         public async Task DeleteDocumentAsync(string id)
