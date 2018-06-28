@@ -11,6 +11,8 @@ namespace ProfileManager.Entities
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Department { get; set; }
+        //funny we have to keep this for human verification of an image, but the computer doesn't need it
         public Uri PhotoPath { get; set; }
+        public string PersistedFaceId { get; set; }
     }
 }

@@ -10,11 +10,13 @@ using Microsoft.Extensions.Options;
 
 namespace ProfileManager.Test
 {
+    // todo: update tests to use the oxford provider
     public class FaceTest
     {
         private readonly Mock<FakeHttpMessageHandler> _fakeHttpHandler;
         private readonly HttpClient _fakeHttpClient;
         private readonly HttpClient _realHttpClient;
+        private readonly Microsoft.ProjectOxford.Face.FaceServiceClient _faceClient;
 
         private IConfiguration Configuration { get; set; }
 
@@ -33,6 +35,7 @@ namespace ProfileManager.Test
             _realHttpClient = new HttpClient();
 
             _options = Options.Create(new FaceInfoProviderOptions() { Endpoint = Configuration["FaceInfoProvider:Endpoint"], Key = Configuration["FaceInfoProvider:Key"] });
+            _faceClient = new Microsoft.ProjectOxford.Face.FaceServiceClient(_options.Value.Key);
         }
 
         // todo: clean all these up
@@ -47,9 +50,10 @@ namespace ProfileManager.Test
                 Content = new StringContent(await File.ReadAllTextAsync(sampleData), System.Text.Encoding.UTF8, "application/json")
             });
 
-            var azr = new AzureFaceInfoProvider(_fakeHttpClient, _options);
+            
+            var azr = new AzureOxfordFaceInfoProvider(_faceClient, _options.Value.PersonGroupId);
             var fileBytes = await File.ReadAllBytesAsync(samplePic);
-            var faces = await azr.GetFacesFromPhotoAsync(fileBytes);
+            var faces = await azr.DetectFacesFromPhotoAsync(fileBytes);
             Assert.True(faces.Count == 1);
         }
 
@@ -64,9 +68,9 @@ namespace ProfileManager.Test
                 Content = new StringContent(await File.ReadAllTextAsync(sampleData), System.Text.Encoding.UTF8, "application/json")
             });
 
-            var azr = new AzureFaceInfoProvider(_fakeHttpClient, _options);
+            var azr = new AzureOxfordFaceInfoProvider(_faceClient, _options.Value.PersonGroupId);
             var fileBytes = await File.ReadAllBytesAsync(samplePic);
-            var faces = await azr.GetFacesFromPhotoAsync(fileBytes);
+            var faces = await azr.DetectFacesFromPhotoAsync(fileBytes);
             Assert.True(faces.Count == 3);
         }
 
@@ -81,9 +85,9 @@ namespace ProfileManager.Test
                 Content = new StringContent(await File.ReadAllTextAsync(sampleData), System.Text.Encoding.UTF8, "application/json")
             });
 
-            var azr = new AzureFaceInfoProvider(_fakeHttpClient, _options);
+            var azr = new AzureOxfordFaceInfoProvider(_faceClient, _options.Value.PersonGroupId);
             var fileBytes = await File.ReadAllBytesAsync(samplePic);
-            var faces = await azr.GetFacesFromPhotoAsync(fileBytes);
+            var faces = await azr.DetectFacesFromPhotoAsync(fileBytes);
             Assert.True(faces.Count == 3);
         }
     }

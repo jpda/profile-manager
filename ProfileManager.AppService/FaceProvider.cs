@@ -3,12 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ProfileManager.Entities;
+using E = ProfileManager.Entities;
 using Microsoft.Extensions.Options;
+using Microsoft.ProjectOxford.Face.Contract;
+using System.IO;
 
 namespace ProfileManager.AppService
 {
-
+    [Obsolete("Use AzureOxfordFaceInfoProvider instead", true)]
     public class AzureFaceInfoProvider : IFaceInfoProvider
     {
         private readonly HttpClient _faceApiClient;
@@ -24,6 +26,26 @@ namespace ProfileManager.AppService
             _faceApiClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _options.Value.Key);
         }
 
+        public Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string group = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string group = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IList<Face>> DetectFacesFromPhotoAsync(Uri photoUri)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IList<Face>> DetectFacesFromPhotoAsync(byte[] fileData)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri)
         {
             throw new NotImplementedException();
@@ -33,7 +55,7 @@ namespace ProfileManager.AppService
         {
             // todo: face ID expires after 24 hours, so a potential optimization would be to store the faceId and the last-scanned timestamp
             // todo: or use the face persistence channels in the face API
-            
+
             throw new NotImplementedException();
             var face1 = GetFacesFromPhotoAsync(photo);
             var face2 = GetFacesFromPhotoAsync(otherPhoto);
@@ -64,6 +86,21 @@ namespace ProfileManager.AppService
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
                 return await GetFacesFromApi(content, uri);
             }
+        }
+
+        public Task IdentifyFaceAsync(byte[] fileData, string groupId = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Face> PersistFace(Uri photoUri)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Face> PersistFace(byte[] fileData)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<IList<Face>> GetFacesFromApi(HttpContent content, string uri)

@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
-using ProfileManager.Entities;
+using Microsoft.ProjectOxford.Face.Contract;
 
 namespace ProfileManager.AppService
 {
+    // this is using the Oxford entities, which makes this whole interface pretty tightly bound to the Oxford SDK and by extension, the Face API.
+    // Should prob launder the objects through my own entities but time is of the essence
     public interface IFaceInfoProvider
     {
-        Task<IList<Face>> GetFacesFromPhotoAsync(Uri photoUri);
-        Task<decimal> GetFaceMatchConfidenceAsync(Uri photoUri, Uri liveUri);
-        Task<IList<Face>> GetFacesFromPhotoAsync(byte[] fileData);
+        Task<IList<Face>> DetectFacesFromPhotoAsync(Uri photoUri);
+        Task<IList<Face>> DetectFacesFromPhotoAsync(byte[] fileData);
+        Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, byte[] photoData, string groupId = "");
+        Task<AddPersistedFaceResult> AddPersonToGroupAsync(Guid personId, Stream photoData, string groupId = "");
+        Task IdentifyFaceAsync(byte[] fileData, string groupId = "");
     }
 }
