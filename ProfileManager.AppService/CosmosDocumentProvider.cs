@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace ProfileManager.AppService
 {
@@ -31,6 +32,23 @@ namespace ProfileManager.AppService
             _client = client;
             _databaseId = db;
             _collectionId = collection;
+            CreateDatabaseAndCollection().Wait();
+        }
+
+        private async Task CreateDatabaseAndCollection()
+        {
+            var db = await _client.CreateDatabaseIfNotExistsAsync(new Database() { Id = _databaseId });
+            var collectionDefinition = new DocumentCollection()
+            {
+                // keeping defaults for indexing and size, which should be S1 to start
+                Id = _collectionId,
+                UniqueKeyPolicy = new UniqueKeyPolicy()
+                {
+                    // this is obnoxious
+                    UniqueKeys = new Collection<UniqueKey>(new[] { new UniqueKey() { Paths = new Collection<string>() { "/CompanyId" } } })
+                }
+            };
+            await _client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(db.Resource.Id), collectionDefinition, new RequestOptions() { OfferThroughput = 400 });
         }
 
         public async Task<ServiceResult<T>> GetDocumentAsync(string id)

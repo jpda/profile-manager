@@ -8,5 +8,6 @@ namespace ProfileManager.AppService
         Task<Uri> AddBlob(byte[] blobData, string name);
         Uri GetReadSasForBlob(Uri blobUri, int validForSeconds = 300);
         Uri GetWriteSasForBlob(Uri blobUri, int validForSeconds = 300);
+        Task<bool> DeleteBlobAsync(Uri photoPath);
     }
 }

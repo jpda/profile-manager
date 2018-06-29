@@ -162,5 +162,12 @@ namespace ProfileManager.AppService
             await _client.CreatePersonGroupAsync(groupId, groupId);
             return await GetPersonGroupAsync(groupId);
         }
+
+        public async Task DeletePersonFromPersonGroupAsync(Guid personId, string groupId = "")
+        {
+            var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
+            var group = await GetPersonGroupOrCreateAsync(targetGroup);
+            await _client.DeletePersonFromPersonGroupAsync(group.PersonGroupId, personId);
+        }
     }
 }

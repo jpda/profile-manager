@@ -15,5 +15,6 @@ namespace ProfileManager.AppService
         Task<Guid> AddPersonFaceAsync(Guid personId, byte[] fileData, string groupId = "");
         Task<Guid> CreatePersonInPersonGroupAsync(string employeeObjectId, string employeeId, string personName, string groupId = "");
         Task IdentifyFaceAsync(byte[] fileData, string groupId = "");
+        Task DeletePersonFromPersonGroupAsync(Guid personGroupPersonId, string groupId = "");
     }
 }
