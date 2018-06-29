@@ -8,21 +8,21 @@
 <div class="row">
     <div class="col-md-6">
         <h2>Live</h2>
-        <p>Use your webcam and snap a pic to validate against known users, or upload a photo to check. </p>
+        <p>Use your webcam and snap a pic to validate against known users, or upload a photos to check. </p>
         <div id="live-container">
             <video id="live-video">Video stream not available.</video>
-            <button id="startbutton" class="live-snapshot-button">Take photo</button>
+            <button id="startbutton" class="btn btn-primary live-snapshot-button">Take photo</button>
             <canvas id="canvas" class="live-canvas"></canvas>
             <div class="output">
-                <img id="photo" alt="The screen capture will appear in this box.">
+                <img id="photo" alt="The screen capture will appear in this box." class="live-result-photo">
             </div>
         </div>
         <form asp-action="VerifyLive" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <input type="hidden" id="photoB64" name="photoB64" />
-                <input type="submit" value="Check!" class="btn btn-default" />
-            </div>
+                <input type="submit" value="Submit" class="btn btn-primary" id="submit-live-photo" style="display:none;" />
+            </div> 
         </form>
     </div>
     <div class="col-md-6">
@@ -30,11 +30,13 @@
         <form asp-action="Verify" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label class="control-label">Profile photo</label>
-                <input type="file" class="form-control" name="photoFile" />
+                <label class="btn btn-primary btn-file">
+                    <span class="glyphicon glyphicon-cloud-upload"></span> Choose a photo to verify
+                    <input type="file" class="form-control" name="photoFile" style="display:none;" />
+                </label>
             </div>
             <div class="form-group">
-                <input type="submit" value="Check!" class="btn btn-default" />
+                <input type="submit" value="Submit" class="btn btn-primary" />
             </div>
         </form>
     </div>
@@ -43,7 +45,7 @@
     <script type="text/javascript">
         // neat! see here: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Taking_still_photos
         (function () {
-            var width = 320;    // We will scale the photo width to this
+            var width = 480;    // We will scale the photo width to this
             var height = 0;     // This will be computed based on the input stream
 
             var streaming = false;
@@ -107,6 +109,8 @@
 
                     var data = canvas.toDataURL('image/png');
                     photo.setAttribute('src', data);
+                    $("#photo").show();
+                    $("#submit-live-photo").show();
                     photoDataToSubmit.setAttribute("value", data);
                 } else {
                     clearphoto();

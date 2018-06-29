@@ -6,9 +6,8 @@
 
 <h2>Delete</h2>
 
-<h3>Are you sure you want to delete this?</h3>
+<h3>Are you sure you want to delete @($"{Model.FirstName} {Model.LastName}")?</h3>
 <div>
-    <h4>Employee</h4>
     <hr />
     <dl class="dl-horizontal">
         <dt>
@@ -45,7 +44,9 @@
 
     <form asp-action="Delete">
         <input type="hidden" value="@Model.ImmutableId" name="ImmutableId" id="ImmutableId" />
-        <input type="submit" value="Delete" class="btn btn-default" /> |
-        <a asp-action="Index">Back to List</a>
+        <div class="btn-group">
+            <a asp-action="Index" class="btn btn-primary"><span class="glyphicon glyphicon-backward"></span> Back to List</a>
+            <input type="submit" value="Delete" class="btn btn-danger" />
+        </div>
     </form>
 </div>

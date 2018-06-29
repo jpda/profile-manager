@@ -36,6 +36,10 @@ namespace ProfileManager.AppService
 
             var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
             var group = await GetPersonGroupOrCreateAsync(targetGroup);
+            if(!incomingFaces.Any())
+            {
+                return new List<IdentifyResult>();
+            }
             var result = await _client.IdentifyAsync(incomingFaces.Select(x => x.FaceId).ToArray(), personGroupId: group.PersonGroupId, confidenceThreshold: 0.5f);
             return result.ToList();
         }

@@ -30,14 +30,14 @@
             <div class="form-group">
                 <input type="hidden" value="@Model.ImmutableId" name="ImmutableId" />
                 <input type="hidden" value="@Model.CompanyId" name="CompanyId" />
-                <input type="submit" value="Save" class="btn btn-default" />
+                <input type="submit" value="Save" class="btn btn-success" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index" class="btn btn-default"><span class="glyphicon glyphicon-backward"></span> Back to List</a>
 </div>
 
 @section Scripts {

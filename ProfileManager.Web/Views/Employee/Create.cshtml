@@ -4,14 +4,14 @@
     ViewData["Title"] = "Create";
 }
 
-<h2>Create</h2>
-
-<h4>Employee</h4>
+<h2>Add a new employee</h2>
+<p>Use this form to add a new employee. Upload a photo or snap a live pic to use for their profile.</p>
 <hr />
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="Create" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-12">
             <div class="form-group">
                 <label asp-for="FirstName" class="control-label"></label>
                 <input asp-for="FirstName" class="form-control" />
@@ -27,39 +27,52 @@
                 <input asp-for="Department" class="form-control" />
                 <span asp-validation-for="Department" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label class="control-label">Profile photo</label>
-                <input type="file" class="form-control" name="photoFile" />
-            </div>
-            <div class="form-group">
-                <input type="hidden" id="photoB64" name="photoB64" />
-                <input type="submit" value="Create" class="btn btn-default" />
-            </div>
-        </form>
+        </div>
     </div>
-    <div class="col-md-6">
-        <h2>Live</h2>
-        <div id="live-container">
-            <video id="live-video">Video stream not available.</video>
-            <button id="startbutton" class="live-snapshot-button">Take photo</button>
-            <canvas id="canvas" class="live-canvas"></canvas>
-            <div class="output">
-                <img id="photo" alt="The screen capture will appear in this box.">
+    
+    <h2>Profile Photo</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Upload from your computer, or...</h4>
+            <div class="form-group">
+                <label class="btn btn-primary btn-file">
+                    <span class="glyphicon glyphicon-cloud-upload"></span> Upload a profile photo from your computer
+                    <input type="file" class="form-control" name="photoFile" style="display:none;" />
+                </label>
+            </div>
+            
+        </div>
+        <div class="col-md-6">
+            <h4>...take a live photo</h4>
+            <div id="live-container">
+                <video id="live-video">Video stream not available.</video>
+                <button id="startbutton" class="btn btn-primary live-snapshot-button">Take photo</button>
+                <canvas id="canvas" class="live-canvas"></canvas>
+                <div class="output">
+                    <img id="photo" alt="The screen capture will appear in this box." class="live-result-photo">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <input type="hidden" id="photoB64" name="photoB64" />
+                    <input type="submit" value="Create new user" class="btn btn-lg btn-success" style="width:50%;margin-left:25%;" />
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</form>
+@*<div>
+    <a asp-action="Index" class="btn btn-default"><span class="glyphicon glyphicon-backward"></span> Back to List</a>
+</div>*@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script type="text/javascript">
         // neat! see here: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Taking_still_photos
         (function () {
-            var width = 320;    // We will scale the photo width to this
+            var width = 480;    // We will scale the photo width to this
             var height = 0;     // This will be computed based on the input stream
 
             var streaming = false;
@@ -123,6 +136,8 @@
 
                     var data = canvas.toDataURL('image/png');
                     photo.setAttribute('src', data);
+                    $("#photo").show();
+                    $("#submit-live-photo").show();
                     photoDataToSubmit.setAttribute("value", data);
                 } else {
                     clearphoto();
