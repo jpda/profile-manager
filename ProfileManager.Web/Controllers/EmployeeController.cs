@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProfileManager.AppService;
@@ -22,19 +23,19 @@ namespace ProfileManager.Web.Controllers
             _blobProvider = blobProvider;
         }
 
-        // GET: Employee
+        [AllowAnonymous]
         public ActionResult Index()
         {
             return RedirectToAction("List");
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> List()
         {
             var model = await _repo.GetAllEmployeesAsync();
             return View(model);
         }
 
-        // GET: Employee/Details/5
         public async Task<IActionResult> Details(string id)
         {
             var model = await _repo.GetEmployeeAsync(id);
@@ -55,7 +56,7 @@ namespace ProfileManager.Web.Controllers
             return View(nameof(Details), model);
         }
 
-        // GET: Employee/Create
+        //[Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
             return View();
@@ -64,6 +65,7 @@ namespace ProfileManager.Web.Controllers
         // todo: lots of discrete activities here, should split them out to handle failure of any individual tasks in a more robust way (e.g., compensating txns)
         // todo: add proxy model for Employee so we can use things like IFormFile as a property in the model and map back to Employee the entity without leaking HTTP and MVC-specific stuff to the entity
         // todo: reconsider how much context the controller should have around employee creation - e.g., moving this into the employee service rather than the controller
+        //[Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee e, IFormFile photoFile)
@@ -113,7 +115,7 @@ namespace ProfileManager.Web.Controllers
             }
         }
 
-        // GET: Employee/Edit/5
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(string id)
         {
             var model = await _repo.GetEmployeeAsync(id);
@@ -124,7 +126,7 @@ namespace ProfileManager.Web.Controllers
             return View(model);
         }
 
-        // POST: Employee/Edit/5
+        //[Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Employee e)
@@ -151,6 +153,7 @@ namespace ProfileManager.Web.Controllers
             }
         }
 
+        //[Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> Delete(string id)
         {
@@ -158,6 +161,7 @@ namespace ProfileManager.Web.Controllers
             return View(model);
         }
 
+        //[Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Employee e)
