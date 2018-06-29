@@ -23,3 +23,6 @@ Disabled by default, but can be enabled via `Authorization:Enforced = true` - th
 - Create new users
 - Edit users
 - Delete users
+
+## WIP
+- See the [issues](https://github.com/jpda/profile-manager/issues) list for stuff that's pending
