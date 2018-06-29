@@ -42,10 +42,10 @@
         </dl>
     </div>
     <div class="col-md-6">
-        <img src="@Model.PhotoPath" alt="user" />
+        <img src="@Model.PhotoPathSas" alt="user" style="max-height:200px;width:auto;"/>
     </div>
     <div>
-        @Html.ActionLink("Edit", "Edit", new { id = Model.CompanyId }) |
+        @Html.ActionLink("Edit", "Edit", new { id = Model.ImmutableId }) |
         <a asp-action="Index">Back to List</a>
     </div>
 </div>

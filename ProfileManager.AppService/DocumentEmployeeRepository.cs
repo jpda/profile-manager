@@ -11,15 +11,16 @@ namespace ProfileManager.AppService
     public class DocumentEmployeeRepository : IEmployeeRepository
     {
         private IDocumentProvider<Employee> _repo;
+        private IBlobProvider _blobProvider;
 
-        public DocumentEmployeeRepository(IDocumentProvider<Employee> repo)
+        public DocumentEmployeeRepository(IDocumentProvider<Employee> repo, IBlobProvider blobProvider)
         {
             _repo = repo;
+            _blobProvider = blobProvider;
         }
 
         public async Task<Employee> GetEmployeeAsync(string immutableId)
         {
-
             var result = await _repo.GetDocumentAsync(immutableId);
             return result.Value;
         }
@@ -76,18 +77,23 @@ namespace ProfileManager.AppService
                 var employeeRecord = await _repo.CreateDocumentAsync(e);
                 if (!employeeRecord.Success && employeeRecord.ErrorCode == "Conflict")
                 {
-                    await CreateEmployeeAsync(e);
+                    // retry, basically get a new ID because ours conflicted
+                    e = await CreateEmployeeAsync(e);
                 }
                 //todo : handle other error cases better than rethrowing
                 else if (!employeeRecord.Success && employeeRecord.Exception != null)
                 {
                     throw employeeRecord.Exception;
                 }
-                else
+                else if (!employeeRecord.Success)
                 {
                     throw new Exception(employeeRecord.Message);
                 }
-                return employeeRecord.Value;
+
+                // todo: reconsider this, perhaps totally OOB photo uploading (for supporting multiple)
+                //e = await SaveEmployeePhoto(e);
+
+                return e;
             }
             catch (Exception ex)
             {
@@ -96,6 +102,16 @@ namespace ProfileManager.AppService
             }
             // todo: hate to return null
             return null;
+        }
+
+        // todo: should handle and check for other image formats
+        public async Task<Uri> SaveEmployeePhoto(Employee e)
+        {
+            var name = $"{e.PersistedFaceId}.jpg";
+            var photoUri = await _blobProvider.AddBlob(e.PhotoBytes, name);
+            return photoUri;
+            //e.PhotoPath = photoUri;
+            //return await UpdateEmployeeAsync(e);
         }
     }
 }
