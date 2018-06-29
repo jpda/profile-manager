@@ -17,6 +17,7 @@ namespace ProfileManager.AppService
         Task<Employee> UpdateEmployeeAsync(Employee e);
         Task DeleteEmployeeAsync(Employee e);
         Task<Uri> SaveEmployeePhoto(Employee e);
+        Task<Employee> GetEmployeeByPersonGroupPersonId(Guid personGroupPersonId);
     }
 }
 
