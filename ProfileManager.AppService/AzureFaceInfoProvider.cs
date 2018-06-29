@@ -141,5 +141,10 @@ namespace ProfileManager.AppService
             }
             return new List<Face>();
         }
+
+        Task<IList<IdentifyResult>> IFaceInfoProvider.IdentifyFaceAsync(byte[] fileData, string groupId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

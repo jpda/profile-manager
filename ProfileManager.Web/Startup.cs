@@ -19,6 +19,7 @@ namespace ProfileManager.Web
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
+            Environment = env;
         }
 
         public IConfiguration Configuration { get; }

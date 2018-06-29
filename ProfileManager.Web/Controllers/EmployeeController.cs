@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProfileManager.AppService;
 using ProfileManager.Entities;
+using ProfileManager.Web.Models;
 
 namespace ProfileManager.Web.Controllers
 {
@@ -34,6 +35,71 @@ namespace ProfileManager.Web.Controllers
         {
             var model = await _repo.GetAllEmployeesAsync();
             return View(model);
+        }
+
+        [AllowAnonymous]
+        public IActionResult Verify()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Verify(IFormFile photoFile)
+        {
+            using (var ms = new MemoryStream())
+            {
+                await photoFile.CopyToAsync(ms);
+                var photoBytes = ms.ToArray();
+                var verificationResults = await VerifyFromBytes(photoBytes);
+                var model = new VerificationCandidateViewModel
+                {
+                    EncodedOriginalPhotoData = $"data:image/png;base64,{Convert.ToBase64String(photoBytes)}",
+                    Candidates = verificationResults
+                };
+                return View(nameof(VerificationCandidates), model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyLive(string photoB64)
+        {
+            // todo: don't assume PNG
+            var file = Convert.FromBase64String(photoB64.Replace("data:image/png;base64,", ""));
+            var verificationResults = await VerifyFromBytes(file);
+            var model = new VerificationCandidateViewModel
+            {
+                EncodedOriginalPhotoData = photoB64,
+                Candidates = verificationResults
+            };
+            return View(nameof(VerificationCandidates), model);
+        }
+
+        public IActionResult VerificationCandidates(VerificationCandidateViewModel model)
+        {
+            return View(model);
+        }
+
+        private async Task<IList<VerificationCandidate>> VerifyFromBytes(byte[] file)
+        {
+            var result = await _faceProvider.IdentifyFaceAsync(file);
+            var hasCandidates = result.Where(x => x.Candidates.Length > 0);
+            var candidates = hasCandidates.SelectMany(y => y.Candidates).Select(c => new VerificationCandidate() { Confidence = c.Confidence, PersonGroupPersonId = c.PersonId }).ToList();
+            var model = new List<VerificationCandidate>();
+            foreach (var candidate in candidates)
+            {
+                var employee = await _repo.GetEmployeeByPersonGroupPersonId(candidate.PersonGroupPersonId);
+                candidate.Employee = employee;
+                if (candidate.Employee.PhotoPath != null)
+                {
+                    // todo: should probably get rid of one of these
+                    var sas = _blobProvider.GetReadSasForBlob(employee.PhotoPath);
+                    candidate.CandidateEmployeePhotoUri = sas;
+                    candidate.Employee.PhotoPathSas = sas;
+                }
+
+                model.Add(candidate);
+            }
+            return model;
         }
 
         public async Task<IActionResult> Details(string id)
@@ -68,24 +134,18 @@ namespace ProfileManager.Web.Controllers
         //[Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee e, IFormFile photoFile)
+        public async Task<IActionResult> Create(Employee e, string photoB64, IFormFile photoFile)
         {
             try
             {
-                if (photoFile == null)
+                e.PhotoBytes = await GetByteArrayFromImageContainersAsync(photoB64, photoFile);
+
+                if (e.PhotoBytes == null)
                 {
                     ModelState.AddModelError(string.Empty, "No photo uploaded.");
+                    return View();
                 }
-                using (var stream = photoFile.OpenReadStream())
-                {
-                    // copying to a memory stream ensures the whole file stream is copied
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        await stream.CopyToAsync(memoryStream);
-                        e.PhotoBytes = memoryStream.ToArray();
-                    }
 
-                }
                 var facesInSubmittedPhoto = await _faceProvider.DetectFacesFromPhotoAsync(e.PhotoBytes);
                 if (facesInSubmittedPhoto.Count == 0)
                 {
@@ -112,6 +172,30 @@ namespace ProfileManager.Web.Controllers
             catch
             {
                 return View();
+            }
+        }
+
+        private async Task<byte[]> GetByteArrayFromImageContainersAsync(string b64, IFormFile file)
+        {
+            if (file == null && string.IsNullOrEmpty(b64))
+            {
+                return null;
+            }
+
+            // we'll let the webcam photo take precedence
+            if (!string.IsNullOrEmpty(b64))
+            {
+                return Convert.FromBase64String(b64.Replace("data:image/png;base64,", ""));
+            }
+
+            using (var stream = file.OpenReadStream())
+            {
+                // copying to a memory stream ensures the whole file stream is copied
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    return memoryStream.ToArray();
+                }
             }
         }
 

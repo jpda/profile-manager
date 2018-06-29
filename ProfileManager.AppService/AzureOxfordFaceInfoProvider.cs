@@ -28,15 +28,16 @@ namespace ProfileManager.AppService
             _defaultPersonGroupId = personGroupId;
         }
 
-        public async Task IdentifyFaceAsync(byte[] fileData, string groupId = "")
+        public async Task<IList<IdentifyResult>> IdentifyFaceAsync(byte[] fileData, string groupId = "")
         {
             var incomingFaces = await DetectFacesFromPhotoAsync(fileData);
-            var incomingFace = incomingFaces.SingleOrDefault();
+            //var incomingFace = incomingFaces.SingleOrDefault();
             if (incomingFaces == null) { throw new Exception("number of faces in source doesn't equal 1"); }
 
             var targetGroup = string.IsNullOrEmpty(groupId) ? _defaultPersonGroupId : groupId;
             var group = await GetPersonGroupOrCreateAsync(targetGroup);
-            var result = await _client.IdentifyAsync(new[] { incomingFace.FaceId }, personGroupId: group.PersonGroupId, confidenceThreshold: 0.75f);
+            var result = await _client.IdentifyAsync(incomingFaces.Select(x => x.FaceId).ToArray(), personGroupId: group.PersonGroupId, confidenceThreshold: 0.5f);
+            return result.ToList();
         }
 
         /// <summary>

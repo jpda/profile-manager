@@ -1,0 +1,48 @@
+﻿@model ProfileManager.Web.Models.VerificationCandidateViewModel
+
+@{
+    ViewData["Title"] = "VerificationCandidates";
+}
+
+<h2>Verification Candidates</h2>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<div class="row">
+    <div class="col-md-6">
+        <h2>Submitted photo</h2>
+        <img src="@Model.EncodedOriginalPhotoData" alt="original photo" />
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Company Id</th>
+            <th>Name</th>
+            <th>Confidence</th>
+            <th>User Photo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Candidates)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Employee.CompanyId)
+                </td>
+                <td>
+                    @($"{item.Employee.FirstName} {item.Employee.LastName}")
+                </td>
+                <td>
+                    @item.Confidence
+                </td>
+                <td>
+                    <img src="@item.CandidateEmployeePhotoUri" alt="user photo" style="max-height:300px;width:auto;" />
+                </td>
+                <td>
+                    @Html.ActionLink("Details", "Details", new { id = item.Employee.ImmutableId })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

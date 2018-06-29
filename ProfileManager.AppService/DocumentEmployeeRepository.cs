@@ -107,11 +107,30 @@ namespace ProfileManager.AppService
         // todo: should handle and check for other image formats
         public async Task<Uri> SaveEmployeePhoto(Employee e)
         {
-            var name = $"{e.PersistedFaceId}.jpg";
+            var name = $"{e.PersistedFaceId}";
             var photoUri = await _blobProvider.AddBlob(e.PhotoBytes, name);
             return photoUri;
             //e.PhotoPath = photoUri;
             //return await UpdateEmployeeAsync(e);
+        }
+
+        public async Task<Employee> GetEmployeeByPersonGroupPersonId(Guid personGroupPersonId)
+        {
+            var results = await _repo.GetDocumentsAsync(x => x.PersonGroupPersonId == personGroupPersonId);
+            if (results.Success)
+            {
+                var matches = results.Value.ToList();
+                if (results.Value.Count() == 1)
+                {
+                    return results.Value.Single();
+                }
+                if (matches.Count > 1)
+                {
+                    throw new Exception("Multiple users should not have the same person id");
+                }
+                // if not found, throw? not sure
+            }
+            return new Employee();
         }
     }
 }
