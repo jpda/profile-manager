@@ -12,6 +12,7 @@ namespace ProfileManager.Entities
         public string LastName { get; set; }
         public string Department { get; set; }
         public Uri PhotoPath { get; set; }
+        public Guid PersonGroupId { get; set; }
         public Guid PersonGroupPersonId { get; set; }
         // todo: make this a collection, since the face API supports (and likely needs, for training) multiple
         public Guid PersistedFaceId { get; set; }

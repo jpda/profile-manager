@@ -29,6 +29,13 @@ namespace ProfileManager.AppService
             return blob.Uri;
         }
 
+        public async Task<bool> DeleteBlobAsync(Uri photoPath)
+        {
+            var fileName = System.IO.Path.GetFileName(photoPath.AbsolutePath);
+            var blob = _container.GetBlockBlobReference(fileName);
+            return await blob.DeleteIfExistsAsync();
+        }
+
         //todo: consider longer timeouts for better caching
         public Uri GetReadSasForBlob(Uri blobUri, int validForSeconds = 300)
         {

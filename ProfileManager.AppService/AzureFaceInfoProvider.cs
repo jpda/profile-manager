@@ -45,6 +45,11 @@ namespace ProfileManager.AppService
             throw new NotImplementedException();
         }
 
+        public Task DeletePersonFromPersonGroupAsync(Guid personGroupPersonId, string groupId = "")
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IList<Face>> DetectFacesFromPhotoAsync(Uri photoUri)
         {
             throw new NotImplementedException();

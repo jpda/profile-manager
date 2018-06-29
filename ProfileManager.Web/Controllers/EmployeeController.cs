@@ -63,6 +63,7 @@ namespace ProfileManager.Web.Controllers
 
         // todo: lots of discrete activities here, should split them out to handle failure of any individual tasks in a more robust way (e.g., compensating txns)
         // todo: add proxy model for Employee so we can use things like IFormFile as a property in the model and map back to Employee the entity without leaking HTTP and MVC-specific stuff to the entity
+        // todo: reconsider how much context the controller should have around employee creation - e.g., moving this into the employee service rather than the controller
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee e, IFormFile photoFile)
@@ -150,22 +151,25 @@ namespace ProfileManager.Web.Controllers
             }
         }
 
-        // GET: Employee/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(string id)
         {
             var model = await _repo.GetEmployeeAsync(id);
             return View(model);
         }
 
-        // POST: Employee/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Employee e)
         {
             try
             {
-                // todo: lots of other work to do here to yank the person, faces, blobs, etc.
-                await _repo.DeleteEmployeeAsync(e);
+                // since the model isn't full, and we can't trust people anyway, just refetch the user
+                var employee = await _repo.GetEmployeeAsync(e.ImmutableId);
+                // todo: be more resilient - e.g., most of these ops should be queued off somewhere else
+                await _faceProvider.DeletePersonFromPersonGroupAsync(employee.PersonGroupPersonId);
+                await _blobProvider.DeleteBlobAsync(employee.PhotoPath);
+                await _repo.DeleteEmployeeAsync(employee);
                 return RedirectToAction(nameof(Index));
             }
             catch
