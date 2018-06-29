@@ -17,5 +17,8 @@ namespace ProfileManager.Entities
         public Guid PersistedFaceId { get; set; }
         [JsonIgnore]
         public byte[] PhotoBytes { get; set; }
+        //todo: another reason to use a model proxy here
+        [JsonIgnore]
+        public Uri PhotoPathSas { get; set; }
     }
 }

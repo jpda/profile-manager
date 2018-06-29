@@ -14,10 +14,12 @@ namespace ProfileManager.Web.Controllers
     {
         IEmployeeRepository _repo;
         IFaceInfoProvider _faceProvider;
-        public EmployeeController(IEmployeeRepository repo, IFaceInfoProvider faceProvider)
+        IBlobProvider _blobProvider;
+        public EmployeeController(IEmployeeRepository repo, IFaceInfoProvider faceProvider, IBlobProvider blobProvider)
         {
             _repo = repo;
             _faceProvider = faceProvider;
+            _blobProvider = blobProvider;
         }
 
         // GET: Employee
@@ -36,12 +38,20 @@ namespace ProfileManager.Web.Controllers
         public async Task<IActionResult> Details(string id)
         {
             var model = await _repo.GetEmployeeAsync(id);
+            if (model.PhotoPath != null)
+            {
+                model.PhotoPathSas = _blobProvider.GetReadSasForBlob(model.PhotoPath);
+            }
             return View(model);
         }
 
         public async Task<IActionResult> DetailsByEmployeeId(string id)
         {
             var model = await _repo.GetEmployeeByEmployeeIdAsync(id);
+            if (model.PhotoPath != null)
+            {
+                model.PhotoPathSas = _blobProvider.GetReadSasForBlob(model.PhotoPath);
+            }
             return View(nameof(Details), model);
         }
 
@@ -92,6 +102,7 @@ namespace ProfileManager.Web.Controllers
                 var persistedFaceId = await _faceProvider.AddPersonFaceAsync(personId, e.PhotoBytes);
                 employee.PersonGroupPersonId = personId;
                 employee.PersistedFaceId = persistedFaceId;
+                employee.PhotoPath = await _repo.SaveEmployeePhoto(e);
                 await _repo.UpdateEmployeeAsync(employee);
                 return RedirectToAction(nameof(Details), new { id = employee.ImmutableId });
             }
@@ -105,6 +116,10 @@ namespace ProfileManager.Web.Controllers
         public async Task<IActionResult> Edit(string id)
         {
             var model = await _repo.GetEmployeeAsync(id);
+            if (model.PhotoPath != null)
+            {
+                model.PhotoPathSas = _blobProvider.GetReadSasForBlob(model.PhotoPath);
+            }
             return View(model);
         }
 

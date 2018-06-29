@@ -33,7 +33,7 @@ namespace ProfileManager.Web
             // todo: refactor configuration; let callers configure via ioptions 
             services.Configure<DocumentProviderOptions>(Configuration.GetSection("DocumentProvider"));
             services.Configure<FaceInfoProviderOptions>(Configuration.GetSection("FaceInfoProvider"));
-            services.Configure<BlobProviderOptions>(Configuration.GetSection("BlobProvider"));
+            services.Configure<BlobProviderOptions>(Configuration.GetSection("BlobStorageProvider"));
 
             // todo: refactor, these probably don't need to be singleton but need to consider implications before switching to transient, especially with httpclient
             services.AddSingleton<IDocumentProvider<Employee>, CosmosDocumentProvider<Employee>>();

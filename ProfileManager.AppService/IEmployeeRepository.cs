@@ -16,6 +16,7 @@ namespace ProfileManager.AppService
         Task<Employee> CreateEmployeeAsync(Employee e);
         Task<Employee> UpdateEmployeeAsync(Employee e);
         Task DeleteEmployeeAsync(Employee e);
+        Task<Uri> SaveEmployeePhoto(Employee e);
     }
 }
 
