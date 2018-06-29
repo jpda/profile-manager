@@ -12,9 +12,9 @@ namespace ProfileManager.Web.Controllers
 {
     public class EmployeeController : Controller
     {
-        IEmployeeRepository _repo;
-        IFaceInfoProvider _faceProvider;
-        IBlobProvider _blobProvider;
+        private readonly IEmployeeRepository _repo;
+        private readonly IFaceInfoProvider _faceProvider;
+        private readonly IBlobProvider _blobProvider;
         public EmployeeController(IEmployeeRepository repo, IFaceInfoProvider faceProvider, IBlobProvider blobProvider)
         {
             _repo = repo;
@@ -61,7 +61,7 @@ namespace ProfileManager.Web.Controllers
             return View();
         }
 
-        // todo: lots of discrete activities here, should split them out to handle failure of specific tasks in a more robust way (e.g., compensating txns)
+        // todo: lots of discrete activities here, should split them out to handle failure of any individual tasks in a more robust way (e.g., compensating txns)
         // todo: add proxy model for Employee so we can use things like IFormFile as a property in the model and map back to Employee the entity without leaking HTTP and MVC-specific stuff to the entity
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -126,13 +126,23 @@ namespace ProfileManager.Web.Controllers
         // POST: Employee/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(Employee e)
         {
             try
             {
-                // TODO: Add update logic here
-
-                return RedirectToAction(nameof(Index));
+                var storedEmployee = await _repo.GetEmployeeAsync(e.ImmutableId);
+                if (storedEmployee.ImmutableId != e.ImmutableId || storedEmployee.CompanyId != e.CompanyId)
+                {
+                    ModelState.AddModelError(string.Empty, "Something didn't line up.");
+                    return RedirectToAction(nameof(Edit), new { id = e.ImmutableId });
+                }
+                // no partial updates in cosmos yet
+                // only update the properties we allow to be updated; fname, lname and department
+                storedEmployee.FirstName = e.FirstName;
+                storedEmployee.LastName = e.LastName;
+                storedEmployee.Department = e.Department;
+                await _repo.UpdateEmployeeAsync(storedEmployee);
+                return RedirectToAction(nameof(Details), new { id = e.ImmutableId });
             }
             catch
             {
@@ -141,20 +151,21 @@ namespace ProfileManager.Web.Controllers
         }
 
         // GET: Employee/Delete/5
-        public ActionResult Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
-            return View();
+            var model = await _repo.GetEmployeeAsync(id);
+            return View(model);
         }
 
         // POST: Employee/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> Delete(Employee e)
         {
             try
             {
-                // TODO: Add delete logic here
-
+                // todo: lots of other work to do here to yank the person, faces, blobs, etc.
+                await _repo.DeleteEmployeeAsync(e);
                 return RedirectToAction(nameof(Index));
             }
             catch
